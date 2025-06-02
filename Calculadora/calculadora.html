@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora Laranja e Preto</title>
+<style>
+  /* Reset básico */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .calculadora {
+    background-color: #1f1f1f;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+    width: 320px;
+    padding: 20px;
+  }
+
+  .display {
+    background-color: #121212;
+    color: #ff8000;
+    font-size: 2.5rem;
+    font-weight: bold;
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: right;
+    margin-bottom: 20px;
+    height: 60px;
+    overflow-x: auto;
+    user-select: none;
+  }
+
+  .botoes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  button {
+    background-color: #ff8000;
+    border: none;
+    border-radius: 12px;
+    color: #1f1f1f;
+    font-size: 1.5rem;
+    font-weight: 600;
+    padding: 18px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px #bf6600;
+    user-select: none;
+  }
+
+  button:active {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+
+  button.funcao {
+    background-color: #333333;
+    color: #ff8000;
+    box-shadow: 0 4px #222222;
+  }
+
+  button.funcao:active {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+
+  button.igual {
+    background-color: #ff8000;
+    color: #fff;
+    grid-column: span 2;
+    box-shadow: 0 4px #bf6600;
+  }
+
+  button.igual:active {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+</style>
+</head>
+<body>
+  <div class="calculadora" role="main" aria-label="Calculadora Laranja e Preto">
+    <div id="display" class="display" aria-live="polite" aria-atomic="true">0</div>
+    <div class="botoes">
+      <button class="funcao" id="btn-clear" aria-label="Limpar">C</button>
+      <button class="funcao" id="btn-backspace" aria-label="Apagar último">←</button>
+      <button class="funcao" id="btn-percent" aria-label="Porcentagem">%</button>
+      <button class="funcao" id="btn-dividir" aria-label="Dividir">÷</button>
+
+      <button class="numero" aria-label="Número 7">7</button>
+      <button class="numero" aria-label="Número 8">8</button>
+      <button class="numero" aria-label="Número 9">9</button>
+      <button class="funcao" id="btn-multiplicar" aria-label="Multiplicar">×</button>
+
+      <button class="numero" aria-label="Número 4">4</button>
+      <button class="numero" aria-label="Número 5">5</button>
+      <button class="numero" aria-label="Número 6">6</button>
+      <button class="funcao" id="btn-subtrair" aria-label="Subtrair">−</button>
+
+      <button class="numero" aria-label="Número 1">1</button>
+      <button class="numero" aria-label="Número 2">2</button>
+      <button class="numero" aria-label="Número 3">3</button>
+      <button class="funcao" id="btn-adicionar" aria-label="Adicionar">+</button>
+
+      <button class="numero" aria-label="Número 0" style="grid-column: span 2;">0</button>
+      <button class="numero" aria-label="Número ponto decimal">,</button>
+      <button class="igual" id="btn-igual" aria-label="Igual">=</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const display = document.getElementById('display');
+      let operacaoAtual = '';
+      let resultadoCalculado = false;
+
+      function atualizarDisplay() {
+        display.textContent = operacaoAtual || '0';
+      }
+
+      function limpar() {
+        operacaoAtual = '';
+        resultadoCalculado = false;
+        atualizarDisplay();
+      }
+
+      function apagarUltimo() {
+        if (resultadoCalculado) {
+          limpar();
+          return;
+        }
+        operacaoAtual = operacaoAtual.slice(0, -1);
+        atualizarDisplay();
+      }
+
+      function acrescentarNumero(numero) {
+        if (resultadoCalculado) {
+          operacaoAtual = numero === ',' ? '0,' : numero;
+          resultadoCalculado = false;
+          atualizarDisplay();
+          return;
+        }
+        // Evitar duplicar vírgulas
+        if (numero === ',' && operacaoAtual.slice(-1) === ',') return;
+        // Permitir somente uma vírgula por número (entre operadores)
+        const partes = operacaoAtual.split(/[\+\-\×\÷]/);
+        const ultimoNumero = partes[partes.length - 1];
+        if (numero === ',' && ultimoNumero.includes(',')) return;
+
+        operacaoAtual += numero;
+        atualizarDisplay();
+      }
+
+      function acrescentarOperador(operador) {
+        if (operacaoAtual === '') {
+          if (operador === '-') {
+            operacaoAtual = '-';
+            atualizarDisplay();
+          }
+          return;
+        }
+        if (resultadoCalculado) {
+          resultadoCalculado = false;
+        }
+        // Substituir operador se o último caracter já for operador
+        const ultimoChar = operacaoAtual.slice(-1);
+        if (['+', '-', '×', '÷'].includes(ultimoChar)) {
+          operacaoAtual = operacaoAtual.slice(0, -1) + operador;
+        } else {
+          operacaoAtual += operador;
+        }
+        atualizarDisplay();
+      }
+
+      function calcular() {
+        if (operacaoAtual === '') return;
+
+        // Substituir caracteres para avaliação com JS
+        let expressao = operacaoAtual
+          .replace(/÷/g, '/')
+          .replace(/×/g, '*')
+          .replace(/,/g, '.')
+          .replace(/%/g, '*0.01');
+
+        // Finalizar se a expressão termina com operador
+        if (['+', '-', '*', '/', '.'].includes(expressao.slice(-1))) {
+          expressao = expressao.slice(0, -1);
+        }
+
+        try {
+          let result = eval(expressao);
+          if (result === Infinity || result === -Infinity) {
+            display.textContent = 'Erro: Divisão por zero';
+            operacaoAtual = '';
+            return;
+          }
+          // Ajustar para vírgula e máximo 8 casas decimais
+          result = Math.round((result + Number.EPSILON) * 100000000) / 100000000;
+          operacaoAtual = result.toString().replace('.', ',');
+          display.textContent = operacaoAtual;
+          resultadoCalculado = true;
+        } catch (e) {
+          display.textContent = 'Erro na expressão';
+          operacaoAtual = '';
+        }
+      }
+
+      function aplicarPorcentagem() {
+        if (operacaoAtual === '') return;
+
+        // Converter vírgulas para pontos para cálculo
+        let expressao = operacaoAtual.replace(/,/g, '.');
+
+        try {
+          // Avaliar expressão parada no último número
+          const operadores = ['+', '-', '*', '/', '%', '÷', '×'];
+          let i = expressao.length - 1;
+          while (i >= 0 && !operadores.includes(expressao[i])) {
+            i--;
+          }
+          const parteAntes = expressao.slice(0, i+1);
+          const parteNumero = expressao.slice(i+1);
+          if (!parteNumero) return;
+
+          let numero = parseFloat(parteNumero);
+          numero = numero / 100;
+
+          operacaoAtual = parteAntes + numero.toString();
+          // trocar ponto por vírgula para display
+          operacaoAtual = operacaoAtual.replace(/\./g, ',');
+          atualizarDisplay();
+        } catch {
+          // ignorar erro
+        }
+      }
+
+      // Eventos botoes
+      document.querySelectorAll('button.numero').forEach(btn => {
+        btn.addEventListener('click', () => {
+          let val = btn.textContent === ',' ? ',' : btn.textContent;
+          acrescentarNumero(val);
+        });
+      });
+
+      document.getElementById('btn-adicionar').addEventListener('click', () => acrescentarOperador('+'));
+      document.getElementById('btn-subtrair').addEventListener('click', () => acrescentarOperador('-'));
+      document.getElementById('btn-multiplicar').addEventListener('click', () => acrescentarOperador('×'));
+      document.getElementById('btn-dividir').addEventListener('click', () => acrescentarOperador('÷'));
+
+      document.getElementById('btn-clear').addEventListener('click', limpar);
+      document.getElementById('btn-backspace').addEventListener('click', apagarUltimo);
+      document.getElementById('btn-igual').addEventListener('click', calcular);
+      document.getElementById('btn-percent').addEventListener('click', aplicarPorcentagem);
+
+      // Suporte ao teclado
+      window.addEventListener('keydown', e => {
+        if (e.key >= '0' && e.key <= '9') {
+          acrescentarNumero(e.key);
+          e.preventDefault();
+        } else if (e.key === ',') {
+          acrescentarNumero(',');
+          e.preventDefault();
+        } else if (e.key === '.' ) {
+          acrescentarNumero(',');
+          e.preventDefault();
+        } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+          let op = e.key;
+          if (op === '*') op = '×';
+          if (op === '/') op = '÷';
+          acrescentarOperador(op);
+          e.preventDefault();
+        } else if (e.key === 'Enter' || e.key === '=') {
+          calcular();
+          e.preventDefault();
+        } else if (e.key === 'Backspace') {
+          apagarUltimo();
+          e.preventDefault();
+        } else if (e.key.toLowerCase() === 'c') {
+          limpar();
+          e.preventDefault();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+
